@@ -11,6 +11,7 @@ public class FunctionClient {
 
     private Function <Integer, Integer> function;
     private Integer value;
+    private Integer result;
 
     public FunctionClient(String type) {
         assignFunction(type);
@@ -26,7 +27,7 @@ public class FunctionClient {
         }
     }
 
-    public Integer getResult() {
+    void computeResult() {
 
         System.out.println(Thread.currentThread().getName() + ": Connecting to server");
         try (
@@ -39,16 +40,29 @@ public class FunctionClient {
             System.out.println(e.getMessage());
         }
 
-        Integer result = function.apply(value);
+        this.result = function.apply(value);
 
-        //        try {
-//            Thread.sleep(100);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-        return result;
+        passResultToChannels();
     }
 
+    private void passResultToChannels(){
+        System.out.println(Thread.currentThread().getName() + ": Connecting to server");
+        try (
+                Socket socket = new Socket(Constants.IP, Constants.PORT);
+                BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())))
+        {
+            out.write(result.toString());
+            System.out.println(Thread.currentThread().getName() + ": Value is written to the socket: " + value);
+            out.flush();
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
 
 }

@@ -17,7 +17,7 @@ public class ComputationManager {
 
     private BiFunction<Integer, Integer, Integer> bitwiseOperation;
     private final Integer value;
-    private final List<Future<Integer>> functionFutures;
+    private final List<Future<?>> functionFutures;
     private final List<Integer> functionResults;
 
     ComputationManager(Integer inputValue) throws IOException {
@@ -37,47 +37,62 @@ public class ComputationManager {
     }
 
     public void startComputing(){
-        List<Callable<Integer>> tasks = assignTasks();
+        List<Runnable> tasks = assignTasks();
 
-        for(Callable<Integer> task: tasks){
-            Future<Integer> future = executorService.submit(task);
+        for(Runnable task: tasks){
+            Future<?> future = executorService.submit(task);
             functionFutures.add(future);
         }
 
         passValueToChannels();
 
-        while (!computationIsDone()){
-            //pass
-        }
-
-        for(Future<Integer> f: functionFutures){
-            try {
-                functionResults.add(f.get());
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
+        while (true){
+            if(computationIsDone()){
+                try ( Socket socket = server.accept();
+                    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))){
+                    Integer first_res = Integer.parseInt(in.readLine());
+                    Integer second_res = Integer.parseInt(in.readLine());
+                    functionResults.add(first_res);
+                    functionResults.add(second_res);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
             }
         }
 
         executorService.shutdown();
-
     }
 
-    private List<Callable<Integer>> assignTasks(){
-        Callable<Integer> fFunction = () -> {
+    private List<Runnable> assignTasks(){
+        Runnable fProcess = () -> {
+            System.out.println("Starting F process");
+            ProcessBuilder processBuilderF = new ProcessBuilder("java", "-cp",
+                    "src", "main.java.org.nalexx6.calculation.FProcess");
+            try {
+                processBuilderF.directory(new File(
+                        "/Users/moleksiienko/IdeaProjects/UniversityLabs/OperationSystems/Lab1")).start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-            FunctionClient function = new FunctionClient("f");
-            return function.getResult();
         };
 
-        Callable<Integer> gFunction = () -> {
+        Runnable gProcess = () -> {
 
-            FunctionClient function = new FunctionClient("g");
-            return function.getResult();
+            ProcessBuilder processBuilderF = new ProcessBuilder("java", "-cp",
+                    "src", "main.java.org.nalexx6.calculation.GProcess");
+            try {
+                processBuilderF.directory(new File(
+                        "/Users/moleksiienko/IdeaProjects/UniversityLabs/OperationSystems/Lab1")).start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         };
 
-        List<Callable<Integer>> tasks = new ArrayList<>();
-        tasks.add(fFunction);
-        tasks.add(gFunction);
+        List<Runnable> tasks = new ArrayList<>();
+        tasks.add(fProcess);
+        tasks.add(gProcess);
         return tasks;
     }
 
@@ -102,7 +117,7 @@ public class ComputationManager {
     private boolean computationIsDone(){
         boolean allDone = true;
 
-        for(Future<Integer> f: functionFutures){
+        for(Future<?> f: functionFutures){
                 allDone &= f.isDone();
         }
         return allDone;
