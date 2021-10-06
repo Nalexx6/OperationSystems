@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.function.BiFunction;
 
@@ -48,15 +49,7 @@ public class ComputationManager {
 
         while (true){
             if(computationIsDone()){
-                try ( Socket socket = server.accept();
-                    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))){
-                    Integer first_res = Integer.parseInt(in.readLine());
-                    Integer second_res = Integer.parseInt(in.readLine());
-                    functionResults.add(first_res);
-                    functionResults.add(second_res);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                readResultsFromChannels();
                 break;
             }
         }
@@ -65,26 +58,26 @@ public class ComputationManager {
     }
 
     private List<Runnable> assignTasks(){
+        String classPath =
+                Objects.requireNonNull(ComputationManager.class.getClassLoader().getResource(".")).toString();
+
         Runnable fProcess = () -> {
             System.out.println("Starting F process");
             ProcessBuilder processBuilderF = new ProcessBuilder("java", "-cp",
-                    "src", "main.java.org.nalexx6.calculation.FProcess");
+                    classPath, "org.nalexx6.calculation.FProcess");
             try {
-                processBuilderF.directory(new File(
-                        "/Users/moleksiienko/IdeaProjects/UniversityLabs/OperationSystems/Lab1")).start();
+                processBuilderF.start();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
         };
 
         Runnable gProcess = () -> {
-
-            ProcessBuilder processBuilderF = new ProcessBuilder("java", "-cp",
-                    "src", "main.java.org.nalexx6.calculation.GProcess");
+            System.out.println("Starting G process");
+            ProcessBuilder processBuilderG = new ProcessBuilder("java", "-cp",
+                    classPath, "org.nalexx6.calculation.GProcess");
             try {
-                processBuilderF.directory(new File(
-                        "/Users/moleksiienko/IdeaProjects/UniversityLabs/OperationSystems/Lab1")).start();
+                processBuilderG.start();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -121,6 +114,18 @@ public class ComputationManager {
                 allDone &= f.isDone();
         }
         return allDone;
+    }
+
+    private void readResultsFromChannels(){
+        for(int i = 0; i < 2; i++) {
+            try (Socket socket = server.accept();
+                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                Integer res = Integer.parseInt(in.readLine());
+                functionResults.add(res);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public Integer getResult(){
