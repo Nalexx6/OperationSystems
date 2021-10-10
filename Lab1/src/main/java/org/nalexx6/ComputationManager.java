@@ -3,10 +3,7 @@ package org.nalexx6;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.BiFunction;
 
@@ -21,12 +18,20 @@ public class ComputationManager {
     public ProcessBuilder processBuilderG;
     private final Integer value;
 
-    private Integer failure;
+    private final List<Runnable> tasks;
     private final List<Future<?>> functionFutures;
     private final List<Integer> functionResults;
 
+    private Boolean fFailure;
+    private Boolean gFailure;
+
+    private Integer remainedComputations;
+    private final List<Integer> softFailCounters;
+
     ComputationManager(Integer inputValue) throws IOException {
         this.value = inputValue;
+
+        tasks = assignTasks();
         functionFutures = new ArrayList<>();
         functionResults = new ArrayList<>();
         assignBitwiseOperation();
@@ -42,7 +47,10 @@ public class ComputationManager {
         processBuilderG = new ProcessBuilder("java", "-cp",
                 classPath, "org.nalexx6.calculation.GProcess");
 
-        failure = 0;
+        softFailCounters = Arrays.asList(0, 0);
+        remainedComputations = 2;
+        fFailure = false;
+        gFailure = false;
     }
 
     private void assignBitwiseOperation(){
@@ -50,26 +58,23 @@ public class ComputationManager {
     }
 
     public void startComputing(){
-        List<Runnable> tasks = assignTasks();
-
         for(Runnable task: tasks){
             Future<?> future = executorService.submit(task);
             functionFutures.add(future);
         }
 
-        passValueToChannels();
+        passValueToChannels(remainedComputations);
 
         while (true){
             if(computationIsDone()){
+                functionFutures.clear();
                 readResultsFromChannels();
-                break;
+                if(remainedComputations == 0)
+                    break;
+                else {
+                    passValueToChannels(remainedComputations);
+                }
             }
-        }
-
-        if(failure == 1){
-            System.out.println("Soft fail");
-        } else if(failure == 2){
-            System.out.println("Hard fail");
         }
 
         executorService.shutdown();
@@ -100,10 +105,10 @@ public class ComputationManager {
         return tasks;
     }
 
-    private void passValueToChannels(){
+    private void passValueToChannels(Integer tasksNumber){
         System.out.println("Passing value to sockets");
 
-        for(int i = 0; i < 2; i++) {
+        for(int i = 0; i < tasksNumber; i++) {
             try (
                 Socket socket = server.accept();
                 ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream())
@@ -128,27 +133,61 @@ public class ComputationManager {
     }
 
     private void readResultsFromChannels(){
-        for(int i = 0; i < 2; i++) {
+        int newRemainder = remainedComputations;
+        for(int i = 0; i < remainedComputations; i++) {
             try (Socket socket = server.accept();
                  ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
-                System.out.println("processing values");
+//                System.out.println("processing values");
                 String res = (String) in.readObject();
+                String processIndex = res.substring(0, 1);
+                res = res.substring(1);
+
                 System.out.println("Output is " + res);
                 if(res.equals("hard fail")){
-                    failure = 2;
-                } else if (res.equals("soft fail") && failure < 1){
-                    failure = 1;
+
+                    if(processIndex.equals("f")) {
+                        fFailure = true;
+                    } else {
+                        gFailure = true;
+                    }
+                    newRemainder--;
+                } else if (res.equals("soft fail")){
+                    if(processIndex.equals("f")) {
+                        if(softFailCounters.get(0) < Constants.SOFT_FAIL_RETRIES) {
+                            functionFutures.add(executorService.submit(tasks.get(0)));
+                            softFailCounters.set(0, softFailCounters.get(0) + 1);
+                        } else {
+                            fFailure = true;
+                            newRemainder--;
+                        }
+                    } else {
+                        if(softFailCounters.get(1) < Constants.SOFT_FAIL_RETRIES) {
+                            functionFutures.add(executorService.submit(tasks.get(1)));
+                            softFailCounters.set(1, softFailCounters.get(1) + 1);
+                        } else {
+                            gFailure = true;
+                            newRemainder--;
+                        }
+                    }
                 } else {
                     functionResults.add(Integer.parseInt(res));
+                    newRemainder--;
                 }
             } catch (IOException | ClassNotFoundException e ) {
                 System.out.println(e);
             }
         }
+
+//        System.out.println("wave ended");
+        remainedComputations = newRemainder;
     }
 
-    public Integer getFailureStatus(){
-        return failure;
+    public Boolean getFStatus(){
+        return fFailure;
+    }
+
+    public Boolean getGStatus(){
+        return gFailure;
     }
 
     public Integer getResult(){

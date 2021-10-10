@@ -23,11 +23,11 @@ public class FunctionClient {
 
     private void assignFunction(String type){
         if(type.equals("f")) {
-            function = x -> (x == 1 ? fExample(x) : Integer.toString(x * x));
+            function = x -> (x == 1 ? type + fExample(x) : type + x * x);
         }
 
         if (type.equals("g")) {
-            function = x ->  Integer.toString(x * (x + 1));
+            function = x -> type + x * (x + 1);
         }
     }
 
@@ -55,11 +55,11 @@ public class FunctionClient {
 
         this.result = function.apply(value);
 
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            Thread.sleep(2000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
         passResultToChannels();
     }

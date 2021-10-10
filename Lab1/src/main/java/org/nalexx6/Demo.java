@@ -31,10 +31,17 @@ public class Demo {
 
         System.out.println("Computation manager started");
         manager.startComputing();
-        Integer failureStatus = manager.getFailureStatus();
-        if(failureStatus == 1){
-            System.out.println("soft fail");
-        } else {
+        Boolean fStatus = manager.getFStatus();
+        Boolean gStatus = manager.getFStatus();
+        if(fStatus){
+            System.out.println("F-function computation failed");
+        }
+
+        if(gStatus){
+            System.out.println("G-function computation failed");
+        }
+
+        if(!(fStatus && gStatus)) {
             System.out.println(manager.getResult());
         }
     }
