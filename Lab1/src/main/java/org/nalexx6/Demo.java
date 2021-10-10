@@ -22,27 +22,26 @@ public class Demo {
 
         System.out.println("Value is read");
 
-        ComputationManager manager = null;
         try {
-            manager = new ComputationManager(inputValue);
+            ComputationManager manager = new ComputationManager(inputValue);
+            System.out.println("Computation manager started");
+            manager.startComputing();
+            Boolean fStatus = manager.getFStatus();
+            Boolean gStatus = manager.getFStatus();
+            if(fStatus){
+                System.out.println("F-function computation failed");
+            }
+
+            if(gStatus){
+                System.out.println("G-function computation failed");
+            }
+
+            if(!(fStatus && gStatus)) {
+                System.out.println(manager.getResult());
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
-        }
-
-        System.out.println("Computation manager started");
-        manager.startComputing();
-        Boolean fStatus = manager.getFStatus();
-        Boolean gStatus = manager.getFStatus();
-        if(fStatus){
-            System.out.println("F-function computation failed");
-        }
-
-        if(gStatus){
-            System.out.println("G-function computation failed");
-        }
-
-        if(!(fStatus && gStatus)) {
-            System.out.println(manager.getResult());
         }
     }
 
