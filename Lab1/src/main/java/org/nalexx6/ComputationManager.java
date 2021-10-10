@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.BiFunction;
 
@@ -15,7 +16,12 @@ public class ComputationManager {
     private final ServerSocket server;
 
     private BiFunction<Integer, Integer, Integer> bitwiseOperation;
+
+    public ProcessBuilder processBuilderF;
+    public ProcessBuilder processBuilderG;
     private final Integer value;
+
+    private Integer failure;
     private final List<Future<?>> functionFutures;
     private final List<Integer> functionResults;
 
@@ -29,6 +35,14 @@ public class ComputationManager {
         server = new ServerSocket(Constants.PORT);
         executorService = Executors.newFixedThreadPool(2);
 
+        String classPath =
+                Objects.requireNonNull(ComputationManager.class.getClassLoader().getResource(".")).toString();
+        processBuilderF = new ProcessBuilder("java", "-cp",
+                classPath, "org.nalexx6.calculation.FProcess");
+        processBuilderG = new ProcessBuilder("java", "-cp",
+                classPath, "org.nalexx6.calculation.GProcess");
+
+        failure = 0;
     }
 
     private void assignBitwiseOperation(){
@@ -52,17 +66,18 @@ public class ComputationManager {
             }
         }
 
+        if(failure == 1){
+            System.out.println("Soft fail");
+        } else if(failure == 2){
+            System.out.println("Hard fail");
+        }
+
         executorService.shutdown();
     }
 
     private List<Runnable> assignTasks(){
-        String classPath =
-                Objects.requireNonNull(ComputationManager.class.getClassLoader().getResource(".")).toString();
-
         Runnable fProcess = () -> {
             System.out.println("Starting F process");
-            ProcessBuilder processBuilderF = new ProcessBuilder("java", "-cp",
-                    classPath, "org.nalexx6.calculation.FProcess");
             try {
                 processBuilderF.start();
             } catch (IOException e) {
@@ -72,8 +87,6 @@ public class ComputationManager {
 
         Runnable gProcess = () -> {
             System.out.println("Starting G process");
-            ProcessBuilder processBuilderG = new ProcessBuilder("java", "-cp",
-                    classPath, "org.nalexx6.calculation.GProcess");
             try {
                 processBuilderG.start();
             } catch (IOException e) {
@@ -95,7 +108,7 @@ public class ComputationManager {
                 Socket socket = server.accept();
                 ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream())
             ){
-                out.write(value);
+                out.writeObject(value);
                 out.flush();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -118,12 +131,24 @@ public class ComputationManager {
         for(int i = 0; i < 2; i++) {
             try (Socket socket = server.accept();
                  ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
-                Integer res = in.readInt();
-                functionResults.add(res);
-            } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("processing values");
+                String res = (String) in.readObject();
+                System.out.println("Output is " + res);
+                if(res.equals("hard fail")){
+                    failure = 2;
+                } else if (res.equals("soft fail") && failure < 1){
+                    failure = 1;
+                } else {
+                    functionResults.add(Integer.parseInt(res));
+                }
+            } catch (IOException | ClassNotFoundException e ) {
+                System.out.println(e);
             }
         }
+    }
+
+    public Integer getFailureStatus(){
+        return failure;
     }
 
     public Integer getResult(){

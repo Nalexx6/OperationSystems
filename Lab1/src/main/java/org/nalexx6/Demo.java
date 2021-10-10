@@ -31,7 +31,12 @@ public class Demo {
 
         System.out.println("Computation manager started");
         manager.startComputing();
-        System.out.println(manager.getResult());
+        Integer failureStatus = manager.getFailureStatus();
+        if(failureStatus == 1){
+            System.out.println("soft fail");
+        } else {
+            System.out.println(manager.getResult());
+        }
     }
 
 }
