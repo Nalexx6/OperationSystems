@@ -1,7 +1,5 @@
 package org.nalexx6;
 
-import org.nalexx6.calculation.FunctionClient;
-
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -95,9 +93,9 @@ public class ComputationManager {
         for(int i = 0; i < 2; i++) {
             try (
                 Socket socket = server.accept();
-                BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))
+                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream())
             ){
-                out.write(value.toString());
+                out.write(value);
                 out.flush();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -119,8 +117,8 @@ public class ComputationManager {
     private void readResultsFromChannels(){
         for(int i = 0; i < 2; i++) {
             try (Socket socket = server.accept();
-                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-                Integer res = Integer.parseInt(in.readLine());
+                 ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+                Integer res = in.readInt();
                 functionResults.add(res);
             } catch (IOException e) {
                 e.printStackTrace();

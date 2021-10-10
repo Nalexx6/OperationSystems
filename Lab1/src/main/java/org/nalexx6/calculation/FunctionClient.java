@@ -19,7 +19,7 @@ public class FunctionClient {
 
     private void assignFunction(String type){
         if(type.equals("f")) {
-            function = x -> x * x;
+            function = x -> (x == 1 ? null : x * x);
         }
 
         if (type.equals("g")) {
@@ -32,9 +32,9 @@ public class FunctionClient {
         System.out.println(Thread.currentThread().getName() + ": Connecting to server");
         try (
             Socket socket = new Socket(Constants.IP, Constants.PORT);
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream())))
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream()))
         {
-            value = Integer.parseInt(in.readLine());
+            value = in.readInt();
             System.out.println(Thread.currentThread().getName() + ": Value is read: " + value);
         } catch (IOException e) {
             System.out.println(e.getMessage());
@@ -55,9 +55,9 @@ public class FunctionClient {
         System.out.println(Thread.currentThread().getName() + ": Connecting to server");
         try (
                 Socket socket = new Socket(Constants.IP, Constants.PORT);
-                BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())))
+                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream()))
         {
-            out.write(result.toString());
+            out.write(result);
             System.out.println(Thread.currentThread().getName() + ": Value is written to the socket: " + value);
             out.flush();
         } catch (IOException e) {
