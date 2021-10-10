@@ -27,7 +27,7 @@ public class Demo {
             System.out.println("Computation manager started");
             manager.startComputing();
             Boolean fStatus = manager.getFStatus();
-            Boolean gStatus = manager.getFStatus();
+            Boolean gStatus = manager.getGStatus();
             if(fStatus){
                 System.out.println("F-function computation failed");
             }
