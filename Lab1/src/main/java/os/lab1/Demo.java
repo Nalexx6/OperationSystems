@@ -1,4 +1,4 @@
-package org.nalexx6;
+package os.lab1;
 
 import java.io.IOException;
 import java.util.Scanner;
@@ -28,6 +28,7 @@ public class Demo {
             manager.startComputing();
             Boolean fStatus = manager.getFStatus();
             Boolean gStatus = manager.getGStatus();
+            Boolean cancelStatus = manager.getCancellationStatus();
             if(fStatus){
                 System.out.println("F-function computation failed");
             }
@@ -36,7 +37,11 @@ public class Demo {
                 System.out.println("G-function computation failed");
             }
 
-            if(!(fStatus && gStatus)) {
+            if(cancelStatus){
+                System.out.println("Computation cancelled");
+            }
+
+            if(!(fStatus || gStatus) && !cancelStatus) {
                 System.out.println(manager.getResult());
             }
 

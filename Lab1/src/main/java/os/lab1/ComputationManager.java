@@ -1,10 +1,13 @@
-package org.nalexx6;
+package os.lab1;
+
+import sun.misc.Signal;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 
 public class ComputationManager {
@@ -16,6 +19,8 @@ public class ComputationManager {
 
     public ProcessBuilder processBuilderF;
     public ProcessBuilder processBuilderG;
+    private Process fProcess;
+    private Process gProcess;
     private final Integer value;
 
     private final List<Runnable> tasks;
@@ -24,6 +29,7 @@ public class ComputationManager {
 
     private Boolean fFailure;
     private Boolean gFailure;
+    private final AtomicBoolean cancel;
 
     private Integer remainedComputations;
     private final List<Integer> softFailCounters;
@@ -51,6 +57,7 @@ public class ComputationManager {
         remainedComputations = 2;
         fFailure = false;
         gFailure = false;
+        cancel = new AtomicBoolean(false);
     }
 
     private void assignBitwiseOperation(){
@@ -58,6 +65,11 @@ public class ComputationManager {
     }
 
     public void startComputing(){
+        Signal.handle(new Signal("INT"), signal -> {
+            System.out.println("cancelling");
+            cancel.set(true);
+        });
+
         for(Runnable task: tasks){
             Future<?> future = executorService.submit(task);
             functionFutures.add(future);
@@ -65,15 +77,23 @@ public class ComputationManager {
 
         passValueToChannels(remainedComputations);
 
+//        long start = System.currentTimeMillis();
         while (true){
-            if(computationIsDone()){
+            if(!fProcess.isAlive() && !gProcess.isAlive()){
                 functionFutures.clear();
                 readResultsFromChannels();
-                if(remainedComputations == 0)
+                if(remainedComputations == 0) {
                     break;
-                else {
+                } else if(cancel.get()) {
+                    System.out.println("Computation cancelled");
+                    break;
+                } else {
+                    //Passing value one more time to all soft-fail functions for retry
                     passValueToChannels(remainedComputations);
                 }
+            } else if(cancel.get()) {
+                System.out.println("Computation cancelled");
+                break;
             }
         }
 
@@ -81,27 +101,27 @@ public class ComputationManager {
     }
 
     private List<Runnable> assignTasks(){
-        Runnable fProcess = () -> {
+        Runnable f = () -> {
             System.out.println("Starting F process");
             try {
-                processBuilderF.start();
+                fProcess = processBuilderF.start();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         };
 
-        Runnable gProcess = () -> {
+        Runnable g = () -> {
             System.out.println("Starting G process");
             try {
-                processBuilderG.start();
+                gProcess =  processBuilderG.start();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         };
 
         List<Runnable> tasks = new ArrayList<>();
-        tasks.add(fProcess);
-        tasks.add(gProcess);
+        tasks.add(f);
+        tasks.add(g);
         return tasks;
     }
 
@@ -130,6 +150,7 @@ public class ComputationManager {
                 allDone &= f.isDone();
         }
         return allDone;
+
     }
 
     private void readResultsFromChannels(){
@@ -137,7 +158,11 @@ public class ComputationManager {
         for(int i = 0; i < remainedComputations; i++) {
             try (Socket socket = server.accept();
                  ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
-//                System.out.println("processing values");
+                if(cancel.get()){
+                    System.out.println("Canceling");
+                    return;
+                }
+                System.out.println("processing values");
                 String res = (String) in.readObject();
                 String processIndex = res.substring(0, 1);
                 res = res.substring(1);
@@ -178,16 +203,19 @@ public class ComputationManager {
             }
         }
 
-//        System.out.println("wave ended");
+        System.out.println("wave ended");
         remainedComputations = newRemainder;
     }
 
     public Boolean getFStatus(){
         return fFailure;
     }
-
     public Boolean getGStatus(){
         return gFailure;
+    }
+
+    public Boolean getCancellationStatus(){
+        return cancel.get();
     }
 
     public Integer getResult(){
