@@ -1,4 +1,6 @@
-package os.lab1;
+package os.lab1.basic_cancellation;
+
+import os.lab1.basic_cancellation.ComputationManager;
 
 import java.io.IOException;
 import java.util.Scanner;

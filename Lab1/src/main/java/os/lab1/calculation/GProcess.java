@@ -1,4 +1,4 @@
-package org.nalexx6.calculation;
+package os.lab1.calculation;
 
 public class GProcess {
     public static void main(String[] args) {

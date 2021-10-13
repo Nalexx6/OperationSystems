@@ -1,5 +1,6 @@
-package os.lab1;
+package os.lab1.basic_cancellation;
 
+import os.lab1.Constants;
 import sun.misc.Signal;
 
 import java.io.*;
@@ -49,9 +50,9 @@ public class ComputationManager {
         String classPath =
                 Objects.requireNonNull(ComputationManager.class.getClassLoader().getResource(".")).toString();
         processBuilderF = new ProcessBuilder("java", "-cp",
-                classPath, "org.nalexx6.calculation.FProcess");
+                classPath, "os.lab1.calculation.FProcess");
         processBuilderG = new ProcessBuilder("java", "-cp",
-                classPath, "org.nalexx6.calculation.GProcess");
+                classPath, "os.lab1.calculation.GProcess");
 
         softFailCounters = Arrays.asList(0, 0);
         remainedComputations = 2;
@@ -80,6 +81,7 @@ public class ComputationManager {
 //        long start = System.currentTimeMillis();
         while (true){
             if(!fProcess.isAlive() && !gProcess.isAlive()){
+                System.out.println("a");
                 functionFutures.clear();
                 readResultsFromChannels();
                 if(remainedComputations == 0) {

@@ -1,7 +1,7 @@
-package org.nalexx6.calculation;
+package os.lab1.calculation;
 
 
-import org.nalexx6.Constants;
+import os.lab1.Constants;
 
 import java.io.*;
 import java.net.Socket;
@@ -11,6 +11,7 @@ import java.util.function.Function;
 
 public class FunctionClient {
 
+    private String type;
     private Function <Integer, String> function;
     SecureRandom random;
     private Integer value;
@@ -18,6 +19,7 @@ public class FunctionClient {
 
     public FunctionClient(String type) {
         random = new SecureRandom();
+        this.type = type;
         assignFunction(type);
     }
 
@@ -55,11 +57,11 @@ public class FunctionClient {
 
         this.result = function.apply(value);
 
-//        try {
-//            Thread.sleep(2000);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         passResultToChannels();
     }
