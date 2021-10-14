@@ -1,4 +1,4 @@
-package os.lab1.basic_cancellation;
+package os.lab1.cancellation.dialog;
 
 import os.lab1.Constants;
 import sun.misc.Signal;
@@ -31,6 +31,7 @@ public class ComputationManager {
     private Boolean fFailure;
     private Boolean gFailure;
     private final AtomicBoolean cancel;
+    private final AtomicBoolean promptInUse;
 
     private Integer remainedComputations;
     private final List<Integer> softFailCounters;
@@ -59,17 +60,62 @@ public class ComputationManager {
         fFailure = false;
         gFailure = false;
         cancel = new AtomicBoolean(false);
+        promptInUse = new AtomicBoolean(false);
     }
 
     private void assignBitwiseOperation(){
         bitwiseOperation = (x, y) -> x * y;
     }
 
-    public void startComputing(){
+    private void initSignalHandler(){
         Signal.handle(new Signal("INT"), signal -> {
-            System.out.println("cancelling");
-            cancel.set(true);
+            promptInUse.set(true);
+            showCancellationPrompt();
+            promptInUse.set(false);
         });
+    }
+
+    private void showCancellationPrompt(){
+        System.out.println("Please confirm that computation should be stopped y(es, stop)/n(ot yet)");
+        long start = System.currentTimeMillis();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        while (true){
+//            System.out.println("fff");
+            if(System.currentTimeMillis() - start > Constants.CANCELLATION_PERIOD){
+                System.out.println("Action is not confirmed within 10s. Proceeding...");
+                initSignalHandler();
+                return;
+            } else {
+                try {
+                    if (reader.ready()){
+                        String s = "";
+                        try {
+                            s = reader.readLine();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                        if(!s.isEmpty()){
+                           if(s.equals("y")){
+                               System.out.println("Cancelling computation..");
+                               cancel.set(true);
+                           } else if (s.equals("n")) {
+                               initSignalHandler();
+                               System.out.println("Proceeding...");
+                           }
+
+                           return;
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public void startComputing(){
+        initSignalHandler();
 
         for(Runnable task: tasks){
             Future<?> future = executorService.submit(task);
@@ -145,17 +191,9 @@ public class ComputationManager {
         System.out.println("Values passed");
     }
 
-    private boolean computationIsDone(){
-        boolean allDone = true;
-
-        for(Future<?> f: functionFutures){
-                allDone &= f.isDone();
-        }
-        return allDone;
-
-    }
-
     private void readResultsFromChannels(){
+        System.out.println("Getting value from sockets");
+
         int newRemainder = remainedComputations;
         for(int i = 0; i < remainedComputations; i++) {
             try (Socket socket = server.accept();
@@ -205,7 +243,7 @@ public class ComputationManager {
             }
         }
 
-        System.out.println("wave ended");
+//        System.out.println("wave ended");
         remainedComputations = newRemainder;
     }
 
