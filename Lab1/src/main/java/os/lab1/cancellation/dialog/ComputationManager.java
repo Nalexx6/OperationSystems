@@ -25,7 +25,6 @@ public class ComputationManager {
     private final Integer value;
 
     private final List<Runnable> tasks;
-    private final List<Future<?>> functionFutures;
     private final List<Integer> functionResults;
 
     private Boolean fFailure;
@@ -40,7 +39,6 @@ public class ComputationManager {
         this.value = inputValue;
 
         tasks = assignTasks();
-        functionFutures = new ArrayList<>();
         functionResults = new ArrayList<>();
         assignBitwiseOperation();
 
@@ -68,6 +66,7 @@ public class ComputationManager {
     }
 
     private void initSignalHandler(){
+        System.out.println("creating signal");
         Signal.handle(new Signal("INT"), signal -> {
             promptInUse.set(true);
             showCancellationPrompt();
@@ -102,6 +101,8 @@ public class ComputationManager {
                            } else if (s.equals("n")) {
                                initSignalHandler();
                                System.out.println("Proceeding...");
+                           } else {
+                               System.out.println("Please enter valid response 'y' or 'n'");
                            }
 
                            return;
@@ -117,18 +118,15 @@ public class ComputationManager {
     public void startComputing(){
         initSignalHandler();
 
-        for(Runnable task: tasks){
-            Future<?> future = executorService.submit(task);
-            functionFutures.add(future);
+        for(Runnable task: tasks) {
+            executorService.submit(task);
         }
 
         passValueToChannels(remainedComputations);
 
-//        long start = System.currentTimeMillis();
         while (true){
             if(!fProcess.isAlive() && !gProcess.isAlive()){
                 System.out.println("a");
-                functionFutures.clear();
                 readResultsFromChannels();
                 if(remainedComputations == 0) {
                     break;
@@ -192,6 +190,9 @@ public class ComputationManager {
     }
 
     private void readResultsFromChannels(){
+        while (promptInUse.get()){
+            //waiting for user to respond to cancellation dialog
+        }
         System.out.println("Getting value from sockets");
 
         int newRemainder = remainedComputations;
@@ -219,7 +220,7 @@ public class ComputationManager {
                 } else if (res.equals("soft fail")){
                     if(processIndex.equals("f")) {
                         if(softFailCounters.get(0) < Constants.SOFT_FAIL_RETRIES) {
-                            functionFutures.add(executorService.submit(tasks.get(0)));
+                            executorService.submit(tasks.get(0));
                             softFailCounters.set(0, softFailCounters.get(0) + 1);
                         } else {
                             fFailure = true;
@@ -227,7 +228,7 @@ public class ComputationManager {
                         }
                     } else {
                         if(softFailCounters.get(1) < Constants.SOFT_FAIL_RETRIES) {
-                            functionFutures.add(executorService.submit(tasks.get(1)));
+                            executorService.submit(tasks.get(1));
                             softFailCounters.set(1, softFailCounters.get(1) + 1);
                         } else {
                             gFailure = true;

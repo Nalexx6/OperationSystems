@@ -34,7 +34,7 @@ public class FunctionClient {
     }
 
     private String fExample(Integer x){
-        if(random.nextInt(5) < 3) {
+        if(random.nextInt(5) < 4) {
             return "soft fail";
         } else {
             return Integer.toString(x + 8);
