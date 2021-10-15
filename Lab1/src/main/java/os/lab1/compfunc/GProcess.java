@@ -1,4 +1,4 @@
-package os.lab1.calculation;
+package os.lab1.compfunc;
 
 import sun.misc.Signal;
 
@@ -10,8 +10,6 @@ public class GProcess {
     }
 
     private static void initSignalHandler(){
-        Signal.handle(new Signal("INT"), signal -> {
-            initSignalHandler();
-        });
+        Signal.handle(new Signal("INT"), signal -> initSignalHandler());
     }
 }

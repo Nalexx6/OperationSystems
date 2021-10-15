@@ -49,9 +49,9 @@ public class ComputationManager {
         String classPath =
                 Objects.requireNonNull(ComputationManager.class.getClassLoader().getResource(".")).toString();
         processBuilderF = new ProcessBuilder("java", "-cp",
-                classPath, "os.lab1.calculation.FProcess");
+                classPath, "os.lab1.compfunc.FProcess");
         processBuilderG = new ProcessBuilder("java", "-cp",
-                classPath, "os.lab1.calculation.GProcess");
+                classPath, "os.lab1.compfunc.GProcess");
 
         softFailCounters = Arrays.asList(0, 0);
         remainedComputations = 2;
@@ -66,7 +66,6 @@ public class ComputationManager {
     }
 
     private void initSignalHandler(){
-        System.out.println("creating signal");
         Signal.handle(new Signal("INT"), signal -> {
             promptInUse.set(true);
             showCancellationPrompt();
@@ -79,7 +78,6 @@ public class ComputationManager {
         long start = System.currentTimeMillis();
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         while (true){
-//            System.out.println("fff");
             if(System.currentTimeMillis() - start > Constants.CANCELLATION_PERIOD){
                 System.out.println("Action is not confirmed within 10s. Proceeding...");
                 initSignalHandler();
@@ -126,7 +124,6 @@ public class ComputationManager {
 
         while (true){
             if(!fProcess.isAlive() && !gProcess.isAlive()){
-                System.out.println("a");
                 readResultsFromChannels();
                 if(remainedComputations == 0) {
                     break;

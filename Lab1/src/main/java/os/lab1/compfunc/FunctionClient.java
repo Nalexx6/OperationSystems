@@ -1,47 +1,38 @@
-package os.lab1.calculation;
+package os.lab1.compfunc;
 
 
 import os.lab1.Constants;
+import os.lab1.compfunc.advanced.IntOps;
 
 import java.io.*;
 import java.net.Socket;
 
-import java.security.SecureRandom;
+import java.util.Optional;
 import java.util.function.Function;
 
 public class FunctionClient {
 
     private String type;
-    private Function <Integer, String> function;
-    SecureRandom random;
+    private Function <Integer, Optional<Optional<Integer>>> function;
     private Integer value;
     private String result;
 
     public FunctionClient(String type) {
-        random = new SecureRandom();
         this.type = type;
         assignFunction(type);
     }
 
     private void assignFunction(String type){
         if(type.equals("f")) {
-            function = x -> (x == 1 ? type + fExample(x) : type + x * x);
+            function = IntOps::trialF;
         }
 
         if (type.equals("g")) {
-            function = x -> type + x * (x + 1);
+            function = IntOps::trialG;
         }
     }
 
-    private String fExample(Integer x){
-        if(random.nextInt(5) < 4) {
-            return "soft fail";
-        } else {
-            return Integer.toString(x + 8);
-        }
-    }
-
-    void computeResult() {
+    public void computeResult() {
 
         System.out.println(Thread.currentThread().getName() + ": Connecting to server");
         try (
@@ -53,14 +44,15 @@ public class FunctionClient {
         } catch (IOException | ClassNotFoundException e) {
             System.out.println(e.getMessage());
         }
-//        value = 2;
 
-        this.result = function.apply(value);
+        Optional<Optional<Integer>> packed_result = function.apply(value);
 
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if(!packed_result.isPresent()){
+            result = type + "hard fail";
+        } else if (!packed_result.get().isPresent()){
+            result = type + "soft fail";
+        } else {
+            result = type + packed_result.get().get();
         }
 
         passResultToChannels();
