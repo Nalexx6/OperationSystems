@@ -30,7 +30,7 @@ public class ComputationManager {
     private Boolean fFailure;
     private Boolean gFailure;
     private final AtomicBoolean cancel;
-    private final AtomicBoolean promptInUse;
+    private final AtomicBoolean resultComputed;
 
     private Integer remainedComputations;
     private final List<Integer> softFailCounters;
@@ -42,7 +42,6 @@ public class ComputationManager {
         functionResults = new ArrayList<>();
         assignBitwiseOperation();
 
-        System.out.println("Starting socket server");
         server = new ServerSocket(Constants.PORT);
         executorService = Executors.newFixedThreadPool(2);
 
@@ -58,7 +57,7 @@ public class ComputationManager {
         fFailure = false;
         gFailure = false;
         cancel = new AtomicBoolean(false);
-        promptInUse = new AtomicBoolean(false);
+        resultComputed = new AtomicBoolean(false);
     }
 
     private void assignBitwiseOperation(){
@@ -66,11 +65,7 @@ public class ComputationManager {
     }
 
     private void initSignalHandler(){
-        Signal.handle(new Signal("INT"), signal -> {
-            promptInUse.set(true);
-            showCancellationPrompt();
-            promptInUse.set(false);
-        });
+        Signal.handle(new Signal("INT"), signal -> showCancellationPrompt());
     }
 
     private void showCancellationPrompt(){
@@ -78,7 +73,9 @@ public class ComputationManager {
         long start = System.currentTimeMillis();
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         while (true){
-            if(System.currentTimeMillis() - start > Constants.CANCELLATION_PERIOD){
+            if(resultComputed.get()) {
+                return;
+            } else if(System.currentTimeMillis() - start > Constants.CANCELLATION_PERIOD){
                 System.out.println("Action is not confirmed within 10s. Proceeding...");
                 initSignalHandler();
                 return;
@@ -128,14 +125,12 @@ public class ComputationManager {
                 if(remainedComputations == 0) {
                     break;
                 } else if(cancel.get()) {
-                    System.out.println("Computation cancelled");
                     break;
                 } else {
                     //Passing value one more time to all soft-fail functions for retry
                     passValueToChannels(remainedComputations);
                 }
             } else if(cancel.get()) {
-                System.out.println("Computation cancelled");
                 break;
             }
         }
@@ -145,7 +140,6 @@ public class ComputationManager {
 
     private List<Runnable> assignTasks(){
         Runnable f = () -> {
-            System.out.println("Starting F process");
             try {
                 fProcess = processBuilderF.start();
             } catch (IOException e) {
@@ -154,7 +148,6 @@ public class ComputationManager {
         };
 
         Runnable g = () -> {
-            System.out.println("Starting G process");
             try {
                 gProcess =  processBuilderG.start();
             } catch (IOException e) {
@@ -169,7 +162,7 @@ public class ComputationManager {
     }
 
     private void passValueToChannels(Integer tasksNumber){
-        System.out.println("Passing value to sockets");
+//        System.out.println("Passing value to sockets");
 
         for(int i = 0; i < tasksNumber; i++) {
             try (
@@ -183,56 +176,57 @@ public class ComputationManager {
             }
         }
 
-        System.out.println("Values passed");
+//        System.out.println("Values passed");
     }
 
     private void readResultsFromChannels(){
-        while (promptInUse.get()){
-            //waiting for user to respond to cancellation dialog
-        }
-        System.out.println("Getting value from sockets");
-
         int newRemainder = remainedComputations;
         for(int i = 0; i < remainedComputations; i++) {
             try (Socket socket = server.accept();
                  ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
                 if(cancel.get()){
-                    System.out.println("Canceling");
                     return;
                 }
-                System.out.println("processing values");
                 String res = (String) in.readObject();
                 String processIndex = res.substring(0, 1);
                 res = res.substring(1);
 
-                System.out.println("Output is " + res);
                 if(res.equals("hard fail")){
-
                     if(processIndex.equals("f")) {
                         fFailure = true;
                     } else {
                         gFailure = true;
                     }
+
+                    System.out.println(processIndex + "-function hard failed");
                     newRemainder--;
                 } else if (res.equals("soft fail")){
                     if(processIndex.equals("f")) {
                         if(softFailCounters.get(0) < Constants.SOFT_FAIL_RETRIES) {
                             executorService.submit(tasks.get(0));
                             softFailCounters.set(0, softFailCounters.get(0) + 1);
+                            System.out.println(processIndex + "-function soft failed. Restarting computation...");
                         } else {
                             fFailure = true;
+                            System.out.println(processIndex + "-function hard failed after "
+                                    + Constants.SOFT_FAIL_RETRIES + " retries");
                             newRemainder--;
                         }
                     } else {
                         if(softFailCounters.get(1) < Constants.SOFT_FAIL_RETRIES) {
                             executorService.submit(tasks.get(1));
                             softFailCounters.set(1, softFailCounters.get(1) + 1);
+                            System.out.println(processIndex + "-function soft failed. Restarting computation...");
                         } else {
                             gFailure = true;
+                            System.out.println(processIndex + "-function hard failed after "
+                                    + Constants.SOFT_FAIL_RETRIES + " retries");
                             newRemainder--;
                         }
                     }
                 } else {
+//                    System.out.println(processIndex + "-function result is " + res);
+
                     functionResults.add(Integer.parseInt(res));
                     newRemainder--;
                 }
@@ -241,15 +235,14 @@ public class ComputationManager {
             }
         }
 
-//        System.out.println("wave ended");
         remainedComputations = newRemainder;
     }
 
-    public Boolean getFStatus(){
-        return fFailure;
+    public Integer getFStatus(){
+        return fFailure ? -1 : fProcess.isAlive() ? softFailCounters.get(0) + 1 : 0;
     }
-    public Boolean getGStatus(){
-        return gFailure;
+    public Integer getGStatus(){
+        return gFailure ? -1 : gProcess.isAlive() ? softFailCounters.get(1) + 1 : 0;
     }
 
     public Boolean getCancellationStatus(){

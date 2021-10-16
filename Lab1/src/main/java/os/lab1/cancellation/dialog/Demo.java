@@ -26,23 +26,27 @@ public class Demo {
             ComputationManager manager = new ComputationManager(inputValue);
             System.out.println("Computation manager started");
             manager.startComputing();
-            Boolean fStatus = manager.getFStatus();
-            Boolean gStatus = manager.getGStatus();
+            Integer fStatus = manager.getFStatus();
+            Integer gStatus = manager.getGStatus();
             Boolean cancelStatus = manager.getCancellationStatus();
-            if(fStatus){
-                System.out.println("F-function computation failed");
-            }
-
-            if(gStatus){
-                System.out.println("G-function computation failed");
-            }
 
             if(cancelStatus){
                 System.out.println("Computation cancelled");
+                if(fStatus > 0){
+                    System.out.println("f-function did not finished. Number of soft fails: " + (fStatus - 1));
+                }
+                if(gStatus > 0){
+                    System.out.println("g-function did not finished. Number of soft fails: " + (fStatus - 1));
+                }
             }
 
-            if(!(fStatus || gStatus) && !cancelStatus) {
-                System.out.println(manager.getResult());
+            if(fStatus + gStatus == -2) {
+                System.out.println("Expression value: failed");
+            } else if(fStatus == 0 && gStatus == 0) {
+                System.out.println("Expression value: " + manager.getResult());
+            } else {
+
+                System.out.println("Expression value: undetermined");
             }
 
         } catch (IOException e) {

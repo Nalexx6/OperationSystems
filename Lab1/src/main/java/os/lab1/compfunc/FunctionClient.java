@@ -12,7 +12,7 @@ import java.util.function.Function;
 
 public class FunctionClient {
 
-    private String type;
+    private final String type;
     private Function <Integer, Optional<Optional<Integer>>> function;
     private Integer value;
     private String result;

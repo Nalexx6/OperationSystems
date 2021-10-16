@@ -12,8 +12,10 @@ public class IntOps{
         }
 
         SecureRandom random = new SecureRandom();
+        int r = random.nextInt(5);
 
-        if(random.nextInt(5) < 4) {
+
+        if(r < 4 && x == 1) {
             return Optional.of(Optional.empty());
         } else {
             return Optional.of(Optional.of(x + 8));
@@ -23,11 +25,24 @@ public class IntOps{
 
     public static Optional<Optional<Integer>> trialG(Integer x) {
         try {
-            Thread.sleep(10000);
+            Thread.sleep(12000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        return Optional.of(Optional.of(x * x));
+        SecureRandom random = new SecureRandom();
+        int r = random.nextInt(22);
+
+        if(x > -1 && x < 20) {
+            if (r > 14) {
+                return Optional.of(Optional.empty());
+            } else if (r < 8) {
+                return Optional.of(Optional.of(x * x));
+            } else {
+                return Optional.empty();
+            }
+        }
+
+        return Optional.of(Optional.of(x * (x + 1)));
     }
 }
