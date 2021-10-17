@@ -102,14 +102,14 @@ public class ComputationManager {
                            if(s.equals("y")){
                                System.out.println("Cancelling computation..");
                                cancel.set(true);
+                               return;
                            } else if (s.equals("n")) {
                                initSignalHandler();
                                System.out.println("Proceeding...");
+                               return;
                            } else {
                                System.out.println("Please enter valid response 'y' or 'n'");
                            }
-
-                           return;
                         }
                     }
                 } catch (IOException e) {
