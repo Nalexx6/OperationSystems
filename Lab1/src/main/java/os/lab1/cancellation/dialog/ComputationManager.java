@@ -45,12 +45,21 @@ public class ComputationManager {
         server = new ServerSocket(Constants.PORT);
         executorService = Executors.newFixedThreadPool(2);
 
-        String classPath =
-                Objects.requireNonNull(ComputationManager.class.getClassLoader().getResource(".")).toString();
-        processBuilderF = new ProcessBuilder("java", "-cp",
-                classPath, "os.lab1.compfunc.FProcess");
-        processBuilderG = new ProcessBuilder("java", "-cp",
-                classPath, "os.lab1.compfunc.GProcess");
+        /*
+        Two ways of process execution provided:
+            1: Using precompiled class files(built by maven)
+            2: Using built jar files (distinct jar for each process main class)
+         */
+
+//        String classPath =
+//                Objects.requireNonNull(ComputationManager.class.getClassLoader().getResource(".")).toString();
+//        processBuilderF = new ProcessBuilder("java", "-cp",
+//                classPath, "os.lab1.compfunc.FProcess");
+//        processBuilderG = new ProcessBuilder("java", "-cp",
+//                classPath, "os.lab1.compfunc.GProcess");
+
+        processBuilderF = new ProcessBuilder("java", "-jar", "./out/artifacts/Lab1_FProcess/Lab1.jar");
+        processBuilderG = new ProcessBuilder("java", "-jar", "./out/artifacts/Lab1_GProcess/Lab1.jar");
 
         softFailCounters = Arrays.asList(0, 0);
         remainedComputations = 2;
