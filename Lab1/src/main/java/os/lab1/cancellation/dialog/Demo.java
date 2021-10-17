@@ -31,7 +31,7 @@ public class Demo {
             Boolean cancelStatus = manager.getCancellationStatus();
 
             if(cancelStatus){
-                System.out.println("Computation cancelled");
+                System.out.println("Computation cancelled using hard key");
                 if(fStatus > 0){
                     System.out.println("f-function did not finished. Number of soft fails: " + (fStatus - 1));
                 }
@@ -52,6 +52,8 @@ public class Demo {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        System.exit(0);
     }
 
 }

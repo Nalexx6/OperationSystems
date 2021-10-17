@@ -13,7 +13,7 @@ import java.util.function.BiFunction;
 
 public class ComputationManager {
 
-    private final ExecutorService executorService;
+    private final Executor executor;
     private final ServerSocket server;
 
     private BiFunction<Integer, Integer, Integer> bitwiseOperation;
@@ -43,7 +43,7 @@ public class ComputationManager {
         assignBitwiseOperation();
 
         server = new ServerSocket(Constants.PORT);
-        executorService = Executors.newFixedThreadPool(2);
+        executor = Executors.newFixedThreadPool(2);
 
         /*
         Two ways of process execution provided:
@@ -123,7 +123,7 @@ public class ComputationManager {
         initSignalHandler();
 
         for(Runnable task: tasks) {
-            executorService.submit(task);
+            executor.execute(task);
         }
 
         passValueToChannels(remainedComputations);
@@ -144,7 +144,7 @@ public class ComputationManager {
             }
         }
 
-        executorService.shutdown();
+//        executorService.shutdown();
     }
 
     private List<Runnable> assignTasks(){
@@ -212,7 +212,7 @@ public class ComputationManager {
                 } else if (res.equals("soft fail")){
                     if(processIndex.equals("f")) {
                         if(softFailCounters.get(0) < Constants.SOFT_FAIL_RETRIES) {
-                            executorService.submit(tasks.get(0));
+                            executor.execute(tasks.get(0));
                             softFailCounters.set(0, softFailCounters.get(0) + 1);
                             System.out.println(processIndex + "-function soft failed. Restarting computation...");
                         } else {
@@ -223,7 +223,7 @@ public class ComputationManager {
                         }
                     } else {
                         if(softFailCounters.get(1) < Constants.SOFT_FAIL_RETRIES) {
-                            executorService.submit(tasks.get(1));
+                            executor.execute(tasks.get(1));
                             softFailCounters.set(1, softFailCounters.get(1) + 1);
                             System.out.println(processIndex + "-function soft failed. Restarting computation...");
                         } else {
