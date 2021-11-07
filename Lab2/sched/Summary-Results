@@ -1,16 +1,17 @@
 Scheduling Type: Batch (Nonpreemptive)
 Scheduling Name: Round Robin
-Simulation Run Time: 9916
-Mean: 1000
-Standard Deviation: 25
-Process #	CPU Time	IO Blocking	CPU Completed	CPU Blocked
-0		979 (ms)	50 (ms)		979 (ms)	19 times
-1		993 (ms)	50 (ms)		993 (ms)	19 times
-2		993 (ms)	50 (ms)		993 (ms)	19 times
-3		993 (ms)	50 (ms)		993 (ms)	19 times
-4		993 (ms)	50 (ms)		993 (ms)	19 times
-5		993 (ms)	50 (ms)		993 (ms)	19 times
-6		993 (ms)	50 (ms)		993 (ms)	19 times
-7		993 (ms)	50 (ms)		993 (ms)	19 times
-8		993 (ms)	0 (ms)		993 (ms)	993 times
-9		993 (ms)	100 (ms)	993 (ms)	9 times
+Simulation Run Time: 1000
+Mean: 50
+Quantum: 50
+Standard Deviation: 40
+Process #	CPU Time	CPU Completed	CPU Blocked
+0		230 (ms)	174 (ms)	3 times
+1		60 (ms)		60 (ms)		1 times
+2		126 (ms)	126 (ms)	2 times
+3		120 (ms)	120 (ms)	2 times
+4		54 (ms)		54 (ms)		1 times
+5		1 (ms)		1 (ms)		0 times
+6		15 (ms)		15 (ms)		0 times
+7		178 (ms)	150 (ms)	3 times
+8		221 (ms)	150 (ms)	3 times
+9		207 (ms)	150 (ms)	3 times
