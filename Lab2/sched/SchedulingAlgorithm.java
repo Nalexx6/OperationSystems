@@ -15,7 +15,7 @@ public class SchedulingAlgorithm {
         int completed = 0;
         String resultsFile = "Summary-Processes";
 
-        result.schedulingType = "Batch (Nonpreemptive)";
+        result.schedulingType = "Interactive (Preemptive)";
         result.schedulingName = "Round Robin";
         try {
             //BufferedWriter out = new BufferedWriter(new FileWriter(resultsFile));
@@ -36,7 +36,7 @@ public class SchedulingAlgorithm {
                     out.println("Process: " + process.processIndex + " registered... (" + process.cputime + " " + process.cpudone + ")");
                 }
                 if (quantum == process.ionext) {
-                    out.println("Process: " + process.processIndex + " I/O blocked... (" + process.cputime + " " + process.cpudone + ")");
+                    out.println("Process: " + process.processIndex + " spent it`s quantum... (" + process.cputime + " " + process.cpudone + ")");
                     process.numblocked++;
                     process.ionext = 0;
                     processQueue.add(process);
