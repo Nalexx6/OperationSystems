@@ -22,29 +22,39 @@ public class SchedulingAlgorithm {
             //OutputStream out = new FileOutputStream(resultsFile);
             PrintStream out = new PrintStream(new FileOutputStream(resultsFile));
             sProcess process = processQueue.remove();
-            out.println("Process: " + process.processIndex + " registered... (" + process.cputime + " " + process.cpudone + ")");
+            out.println("Process: " + process.processIndex + " registered... (" + process.cputime + " " + process.ioblocking + " " + process.cpudone + ")");
             while (comptime < runtime) {
                 if (process.cpudone == process.cputime) {
                     completed++;
-                    out.println("Process: " + process.processIndex + " completed... (" + process.cputime + " " + process.cpudone + ")");
+                    out.println("Process: " + process.processIndex + " completed... (" + process.cputime + " " + process.ioblocking + " " + process.cpudone + ")");
                     if (completed == processVector.size()) {
                         result.compuTime = comptime;
                         out.close();
                         return result;
                     }
                     process = processQueue.remove();
-                    out.println("Process: " + process.processIndex + " registered... (" + process.cputime + " " + process.cpudone + ")");
+                    out.println("Process: " + process.processIndex + " registered... (" + process.cputime + " " + process.ioblocking + " " + process.cpudone + ")");
                 }
-                if (quantum == process.ionext) {
-                    out.println("Process: " + process.processIndex + " spent it`s quantum... (" + process.cputime + " " + process.cpudone + ")");
+                if (quantum == process.quantumnext) {
+                    out.println("Process: " + process.processIndex + " spent it`s quantum... (" + process.cputime + " " + process.ioblocking + " " + process.cpudone + ")");
                     process.numblocked++;
+                    process.quantumnext = 0;
+                    processQueue.add(process);
+                    process = processQueue.remove();
+                    out.println("Process: " + process.processIndex + " registered... (" + process.cputime + " " + process.ioblocking + " " + process.cpudone + ")");
+                }
+                if (process.ioblocking == process.ionext) {
+                    out.println("Process: " + process.processIndex + " I/O blocked.. (" + process.cputime + " " + process.ioblocking + " " + process.cpudone + ")");
+                    process.numblocked++;
+                    process.quantumnext = 0;
                     process.ionext = 0;
                     processQueue.add(process);
                     process = processQueue.remove();
-                    out.println("Process: " + process.processIndex + " registered... (" + process.cputime + " " + process.cpudone + ")");
+                    out.println("Process: " + process.processIndex + " registered... (" + process.cputime + " " + process.ioblocking + " " + process.cpudone + ")");
                 }
                 process.cpudone++;
                 process.ionext++;
+                process.quantumnext++;
                 comptime++;
             }
             out.close();

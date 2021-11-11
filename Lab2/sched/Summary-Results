@@ -4,14 +4,14 @@ Simulation Run Time: 1000
 Mean: 50
 Quantum: 50
 Standard Deviation: 40
-Process #	CPU Time	CPU Completed	CPU Blocked
-0		136 (ms)	136 (ms)	2 times
-1		84 (ms)		84 (ms)		1 times
-2		87 (ms)		87 (ms)		1 times
-3		75 (ms)		75 (ms)		1 times
-4		217 (ms)	185 (ms)	3 times
-5		59 (ms)		59 (ms)		1 times
-6		18 (ms)		18 (ms)		0 times
-7		56 (ms)		56 (ms)		1 times
-8		206 (ms)	150 (ms)	3 times
-9		239 (ms)	150 (ms)	3 times
+Process #	CPU Time	IO Blocking	CPU Completed	CPU Blocked
+0		187 (ms)	66 (ms)	132 (ms)	4 times
+1		166 (ms)	6 (ms)		24 (ms)		4 times
+2		52 (ms)		33 (ms)		52 (ms)		1 times
+3		102 (ms)	38 (ms)	102 (ms)	2 times
+4		61 (ms)		61 (ms)		61 (ms)		1 times
+5		220 (ms)	48 (ms)	192 (ms)	4 times
+6		210 (ms)	22 (ms)		88 (ms)		4 times
+7		80 (ms)		68 (ms)		80 (ms)		2 times
+8		239 (ms)	81 (ms)	157 (ms)	3 times
+9		160 (ms)	62 (ms)	112 (ms)	3 times

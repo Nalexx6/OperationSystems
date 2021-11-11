@@ -65,7 +65,7 @@ public class Scheduling {
             for(int i = 0; i < processnum; i++){
                 cputime = random.nextInt(standardDev) + meanDev * random.nextInt(5);
 //                System.out.println(cputime);
-                processVector.addElement(new sProcess(cputime, 0, 0, 0, i));
+                processVector.addElement(new sProcess(cputime, random.nextInt(quantum * 2), 0, 0, 0, i));
             }
             in.close();
         } catch (IOException e) { /* Handle exceptions */ }
@@ -112,7 +112,7 @@ public class Scheduling {
                 }
                 X = X * standardDev;
                 int cputime = (int) X + meanDev;
-                processVector.addElement(new sProcess(cputime, i * 100, 0, 0, processVector.size()));
+                processVector.addElement(new sProcess(cputime, i * 100, i * 100, 0, 0, processVector.size()));
                 i++;
             }
         }
@@ -126,7 +126,7 @@ public class Scheduling {
             out.println("Mean: " + meanDev);
             out.println("Quantum: " + quantum);
             out.println("Standard Deviation: " + standardDev);
-            out.println("Process #\tCPU Time\tCPU Completed\tCPU Blocked");
+            out.println("Process #\tCPU Time\tIO Blocking\tCPU Completed\tCPU Blocked");
             for (i = 0; i < processVector.size(); i++) {
                 sProcess process = processVector.elementAt(i);
                 out.print(Integer.toString(i));
@@ -137,6 +137,12 @@ public class Scheduling {
                 }
                 out.print(Integer.toString(process.cputime));
                 if (process.cputime < 100) {
+                    out.print(" (ms)\t\t");
+                } else {
+                    out.print(" (ms)\t");
+                }
+                out.print(process.ioblocking);
+                if (process.cpudone < 100) {
                     out.print(" (ms)\t\t");
                 } else {
                     out.print(" (ms)\t");
