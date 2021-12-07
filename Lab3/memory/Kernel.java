@@ -243,15 +243,6 @@ public class Kernel extends Thread {
             }
             physical_count = 0;
         }
-//        if (map_count < (virtPageNum + 1) / 2) {
-//            for (i = 0; i < virtPageNum; i++) {
-//                Page page = (Page) memVector.elementAt(i);
-//                if (page.physical == -1 && map_count < (virtPageNum + 1) / 2) {
-//                    page.physical = i;
-//                    map_count++;
-//                }
-//            }
-//        }
         for (i = 0; i < virtPageNum; i++) {
             Page page = (Page) memVector.elementAt(i);
             if (page.physical == -1) {
@@ -309,7 +300,7 @@ public class Kernel extends Thread {
         step();
         while (runs != runcycles) {
             try {
-                Thread.sleep(2000);
+                Thread.sleep(200);
             } catch (InterruptedException e) {
                 /* Do nothing */
             }
@@ -332,10 +323,12 @@ public class Kernel extends Thread {
             Page page = (Page) memVector.elementAt(index);
             if (page.physical == -1) {
                 if (doFileLog) {
-                    printLogFile("READ " + Long.toString(instruct.addr, addressradix) + " ... page fault");
+                    printLogFile("READ " + Long.toString(instruct.addr, addressradix) +
+                            " | virtual " + index + " | physical " + page.physical + " | page fault");
                 }
                 if (doStdoutLog) {
-                    System.out.println("READ " + Long.toString(instruct.addr, addressradix) + " ... page fault");
+                    System.out.println("READ " + Long.toString(instruct.addr, addressradix) +
+                            " | virtual " + index + " | physical " + page.physical + " | page fault");
                 }
                 PageFault.replacePage(memVector, usageList, virtPageNum, index, controlPanel);
                 controlPanel.pageFaultValueLabel.setText("YES");
@@ -343,10 +336,12 @@ public class Kernel extends Thread {
                 page.R = 1;
                 page.lastTouchTime = 0;
                 if (doFileLog) {
-                    printLogFile("READ " + Long.toString(instruct.addr, addressradix) + " ... okay");
+                    printLogFile("READ " + Long.toString(instruct.addr, addressradix) +
+                            " | virtual " + index + " | physical " + page.physical + " | okay");
                 }
                 if (doStdoutLog) {
-                    System.out.println("READ " + Long.toString(instruct.addr, addressradix) + " ... okay");
+                    System.out.println("READ " + Long.toString(instruct.addr, addressradix) +
+                            " | virtual " + index + " | physical " + page.physical + " | okay");
                 }
                 usageList.remove(index);
                 usageList.add(0, page);
@@ -357,10 +352,12 @@ public class Kernel extends Thread {
             Page page = (Page) memVector.elementAt(index);
             if (page.physical == -1) {
                 if (doFileLog) {
-                    printLogFile("WRITE " + Long.toString(instruct.addr, addressradix) + " ... page fault");
+                    printLogFile("WRITE " + Long.toString(instruct.addr, addressradix) +
+                            " | virtual " + index + " | physical " + page.physical + " | page fault");
                 }
                 if (doStdoutLog) {
-                    System.out.println("WRITE " + Long.toString(instruct.addr, addressradix) + " ... page fault");
+                    System.out.println("WRITE " + Long.toString(instruct.addr, addressradix) +
+                            " | virtual " + index + " | physical " + page.physical + " | page fault");
                 }
                 PageFault.replacePage(memVector, usageList, virtPageNum, index, controlPanel);
                 controlPanel.pageFaultValueLabel.setText("YES");
@@ -368,10 +365,12 @@ public class Kernel extends Thread {
                 page.M = 1;
                 page.lastTouchTime = 0;
                 if (doFileLog) {
-                    printLogFile("WRITE " + Long.toString(instruct.addr, addressradix) + " ... okay");
+                    printLogFile("WRITE " + Long.toString(instruct.addr, addressradix) +
+                            " | virtual " + index + " | physical " + page.physical + " | okay");
                 }
                 if (doStdoutLog) {
-                    System.out.println("WRITE " + Long.toString(instruct.addr, addressradix) + " ... okay");
+                    System.out.println("WRITE " + Long.toString(instruct.addr, addressradix) +
+                            " | virtual " + index + " | physical " + page.physical + " | okay");
                 }
                 usageList.remove(index);
                 usageList.add(0, page);

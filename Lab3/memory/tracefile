@@ -1,7 +1,22 @@
-READ 14 ... okay
-READ 20000 ... okay
-WRITE 52274 ... okay
-READ 16384 ... okay
-READ 16384 ... okay
-WRITE 786433 ... page fault
-WRITE 1000000 ... page fault
+READ 0 | virtual 0 | physical 1 | okay
+READ 64 | virtual 1 | physical 0 | okay
+WRITE 128 | virtual 2 | physical 2 | okay
+READ 192 | virtual 3 | physical 3 | okay
+READ 256 | virtual 4 | physical 4 | okay
+WRITE 320 | virtual 5 | physical 5 | okay
+WRITE 384 | virtual 6 | physical 6 | okay
+READ 448 | virtual 7 | physical 7 | okay
+READ 512 | virtual 8 | physical 8 | okay
+WRITE 576 | virtual 9 | physical 9 | okay
+READ 640 | virtual 10 | physical 10 | okay
+READ 704 | virtual 11 | physical 11 | okay
+WRITE 768 | virtual 12 | physical -1 | page fault
+WRITE 832 | virtual 13 | physical -1 | page fault
+READ 896 | virtual 14 | physical -1 | page fault
+READ 960 | virtual 15 | physical -1 | page fault
+WRITE 1024 | virtual 16 | physical -1 | page fault
+READ 1088 | virtual 17 | physical -1 | page fault
+READ 1152 | virtual 18 | physical -1 | page fault
+WRITE 1216 | virtual 19 | physical -1 | page fault
+WRITE 1280 | virtual 20 | physical -1 | page fault
+READ 0 | virtual 0 | physical -1 | page fault
